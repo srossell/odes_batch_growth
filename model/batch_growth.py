@@ -35,7 +35,7 @@ params = {
 
 mass_balances = {
         'glc': {'v_glc': -1},
-        'dw': {'v_glc': params['Yxs']}
+        'dw': {'v_bio': 1}
         }
 
 init = [100, 0.2]
