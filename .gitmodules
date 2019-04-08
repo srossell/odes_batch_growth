@@ -1,0 +1,3 @@
+[submodule "bcodes"]
+	path = bcodes
+	url = https://github.com/srossell/bcodes.git
