@@ -10,9 +10,7 @@ The maximum rate of glucose consumption is calculated assuming a maximum yield,
 and that the maximum growth rate cannot be higher than that of E. coli.
 """
 
-import matplotlib.pyplot as plt
 import numpy as np
-import pystan
 import scipy.stats as ss
 
 ########################################
@@ -80,7 +78,11 @@ model {{
         glc0=glc0_stan,
         x0=x0_stan
         )
+
 if __name__ == '__main__':
+    import matplotlib.pyplot as plt
+    import pystan
+
     # Compile stan model
     sm = pystan.StanModel(model_code=stan_str)
     # Sample posterior
