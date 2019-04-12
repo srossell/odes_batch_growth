@@ -18,28 +18,28 @@ import scipy.stats as ss
 
 Yxs_max = 0.139  # g_X/mmol_glc
 
-Yxs_alpha = 2
-Yxs_beta = 50
-Yxs_x = np.linspace(0, 0.2, 100)
-Yxs_y = ss.gamma.pdf(Yxs_x, a=Yxs_alpha, scale=1/Yxs_beta)
+Yxs_mu = Yxs_max / 2
+Yxs_sd = Yxs_max / 5
+Yxs_x = np.linspace(0, 0.15, 100)
+Yxs_y = ss.norm.pdf(Yxs_x, loc=Yxs_mu, scale=Yxs_sd)
 
-Yxs_stan = 'gamma({alpha}, {beta})'.format(alpha=Yxs_alpha, beta=Yxs_beta)
+Yxs_stan = 'normal({mu}, {sd})'.format(mu=Yxs_mu, sd=Yxs_sd)
 
 ########################################
 # growth rate. Less than E. coli (0.89 1/h)
 mu_max = 0.89
-mu_alpha = 2
-mu_beta = 10
+mu_mu = mu_max /2
+mu_sd = mu_max / 5
 mu_x = np.linspace(0, 1, 100)
-mu_y = ss.gamma.pdf(mu_x, a=mu_alpha, scale=1/mu_beta)
+mu_y = ss.norm.pdf(mu_x, loc=mu_mu, scale=mu_sd)
 
-mu_stan = 'gamma({alpha}, {beta})'.format(alpha=mu_alpha, beta=mu_beta)
+mu_stan = 'normal({mu}, {sd})'.format(mu=mu_mu, sd=mu_sd)
 
 ########################################
 # Initial glucose. Known with a lot of certaintiy
 glc0_mu = 100 # mmol/l
-glc0_sd = 1
-glc0_x = np.linspace(90, 110, 100)
+glc0_sd = 0.5
+glc0_x = np.linspace(95, 105, 100)
 glc0_y = ss.norm.pdf(glc0_x, glc0_mu, glc0_sd)
 
 glc0_stan = 'normal({mu}, {sd})'.format(mu=glc0_mu, sd=glc0_sd)
@@ -59,10 +59,10 @@ x0_stan = 'beta({alpha}, {beta})'.format(alpha=x0_alpha, beta=x0_beta)
 # Stan model
 stan_str = """
 parameters {{
-    real yxs;
-    real mu;
-    real glc0;
-    real x0;
+    real<lower=0> yxs;
+    real<lower=0> mu;
+    real<lower=0> glc0;
+    real<lower=0> x0;
 }}
 
 model {{

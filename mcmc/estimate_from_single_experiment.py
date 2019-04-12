@@ -64,7 +64,7 @@ transformed data {{
 parameters {{
     real<lower=0> y0[2]; // init
     vector<lower=0>[2] sigma;
-    real p[2];
+    real<lower=0> p[2];
 }}
 
 transformed parameters {{
@@ -146,7 +146,7 @@ fit = sm.sampling(
                     data=datadict,
                     iter=10000,
                     chains=4,
-                    n_jobs=2,
+                    n_jobs=4,
                     warmup=2000,
                     algorithm='NUTS',
                     seed = 42
@@ -171,7 +171,9 @@ params_post.columns = ['glc_0', 'dw_0', 'mu_max', 'Yxs']
 print(df_summary.head(6))
 
 # Plots
-pd.plotting.scatter_matrix(params_post.iloc[::10], diagonal='kde')
+fig, ax = plt.subplots()
+pd.plotting.scatter_matrix(params_post.iloc[::10], diagonal='kde', ax=ax)
+fig.tight_layout()
 plt.show()
 
 # Plot traces and density
