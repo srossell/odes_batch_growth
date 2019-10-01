@@ -105,3 +105,4 @@ generated quantities {{
 
 with open(f_stan_model_str, 'w') as f:
     f.write(stan_str)
+
