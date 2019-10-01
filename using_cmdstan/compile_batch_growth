@@ -1,0 +1,4 @@
+#!/bin/bash
+cd /Users/sr/local/cmdstan-2.18.1_j4
+make /Users/sr/wk/github/odes_batch_growth/using_cmdstan/batch_growth
+

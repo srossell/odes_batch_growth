@@ -1,0 +1,9 @@
+#!/bin/bash
+for i in {1..4}
+do
+    ./batch_growth sample num_samples=5000 num_warmup=2000  \
+        id=$i data file=batch_growh_input_data.r \
+        output file=batch_growth_$i.csv refresh=100
+done
+
+
