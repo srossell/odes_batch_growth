@@ -7,18 +7,23 @@ import arviz as az
 import matplotlib.pyplot as plt
 
 idata = az.from_cmdstan(posterior='batch_growth_[0-9].csv')
+post = idata.posterior
+
+# Changing the coordinates in th xarray
+post = post.assign_coords(y0_dim_0=['glc0', 'dw0'])
+post = post.assign_coords(p_dim_0=['mu_max', 'Yxs'])
 
 # plot posterior
-az.plot_posterior(idata, var_names=['y0'])
+az.plot_posterior(post, var_names=['y0'])
 plt.show()
 
 
 # Pair plots
-az.plot_pair(idata, var_names=['y0', 'p'])
+az.plot_pair(post, var_names=['y0', 'p'])
 plt.show()
 
 
 # Plotting traces
-az.plot_trace(idata.posterior, var_names=['y0', 'p'])
+az.plot_trace(post, var_names=['y0', 'p'])
 plt.show()
 
