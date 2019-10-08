@@ -1,0 +1,5 @@
+#!/bin/bash
+cd /Users/sr/local/cmdstan-2.18.1_j4
+make /Users/sr/wk/github/odes_batch_growth/using_cmdstan/sim_noiseless_odes/output_files/batch_growth_sim
+cd /Users/sr/wk/github/odes_batch_growth/
+

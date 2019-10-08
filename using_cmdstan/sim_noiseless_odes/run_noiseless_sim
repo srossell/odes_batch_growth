@@ -1,0 +1,7 @@
+#!/bin/bash
+
+./output_files/batch_growth_sim \
+    data file=output_files/batch_growth_sim_input_data.r \
+    method=sample algorithm=fixed_param num_samples=1 \
+    output file=output_files/batch_growth_sim_output.r
+
