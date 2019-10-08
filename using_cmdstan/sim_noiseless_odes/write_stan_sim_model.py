@@ -28,6 +28,7 @@ data {{
     int<lower=1> T;
     real t0;
     real t_sim[T];
+    real<lower=0> y0[2]; // init
     }}
 
 transformed data {{
@@ -36,9 +37,7 @@ transformed data {{
 }}
 
 parameters {{
-    real<lower=0> y0[2]; // init
-    vector<lower=0>[2] sigma;
-    real<lower=0> p[2];
+    real<lower=0> p[0];
 }}
 
 transformed parameters {{
