@@ -4,6 +4,7 @@ Write a stan model into a file
 
 import os
 
+from bcodes.utils.stanodes import create_stan_odes_str
 from mcmc.priors import Yxs_stan
 from mcmc.priors import Yxs_x, Yxs_y
 from mcmc.priors import glc0_stan
@@ -12,37 +13,26 @@ from mcmc.priors import mu_stan
 from mcmc.priors import mu_x, mu_y
 from mcmc.priors import x0_stan
 from mcmc.priors import x0_x, x0_y
+from model.batch_growth import batch_growth as m
 
 
 ###############################################################################
 # INPUTS
 
 script_path = os.path.split(__file__)[0]
-f_stan_model_str = os.path.join(script_path, 'batch_growth.stan')
+output_files_path = os.path.join(script_path, 'output_files')
+f_stan_model_str = os.path.join(output_files_path, 'batch_growth.stan')
+
+params2fit = ['mu_max', 'Yxs']
+
+odes_str, trans_dict, rates = create_stan_odes_str(
+        m.id_sp, m.id_rs, m.rates, m.mass_balances, m.params, params2fit)
 
 
-var_dict = {
-        'p[1]': 'mu_max',
-        'p[2]': 'Yxs',
-        'y0[1]':'glc_0',
-        'y0[2]': 'X_0',
-        }
 
 stan_str = """
 functions {{
-    real[] myodes(
-        real t,
-        real[] y,
-        real[] p,
-        real[] x_r,
-        int[] x_i
-        )
-        {{
-            real dydt[2];
-            dydt[1] = -y[2] * (p[1] / p[2]) * (y[1]/1) / (1 + (y[1]/1));
-            dydt[2] = (y[2] * p[1] * (y[1]/1) / (1 + (y[1]/1)));
-            return dydt;
-        }}
+    {odes_str}
 }}
 
 data {{
@@ -67,7 +57,9 @@ parameters {{
 
 transformed parameters {{
     real y_hat[N, 2];
-    y_hat = integrate_ode_rk45(myodes, y0, t0, t_obs, p, x_r, x_i);
+    y_hat = integrate_ode_bdf(
+        odes, y0, t0, t_obs, p, x_r, x_i, 1e-12, 1e-12, 1e8
+        );
 }}
 
 model {{
@@ -84,7 +76,9 @@ generated quantities {{
     real y_hat_n[T, 2];
     real y_hat_sigma[T, 2];
 
-    y_hat_n = integrate_ode_rk45(myodes, y0, t0, t_sim, p, x_r, x_i);
+    y_hat_n = integrate_ode_rk45(
+        odes, y0, t0, t_sim, p, x_r, x_i, 1e-12, 1e-12, 1e8
+        );
     // Add error with estimated sigma
     for (i in 1:T) {{
         y_hat_sigma[i, 1] = y_hat_n[i, 1] + normal_rng(0, sigma[1]);
@@ -92,6 +86,7 @@ generated quantities {{
         }}
 }}
 """.format(
+        odes_str=odes_str,
         yxs=Yxs_stan,
         mu=mu_stan,
         glc0=glc0_stan,
@@ -103,6 +98,8 @@ generated quantities {{
 ###############################################################################
 # OUTPUTS
 
-with open(f_stan_model_str, 'w') as f:
-    f.write(stan_str)
+
+if __name__ == '__main__':
+    with open(f_stan_model_str, 'w') as f:
+        f.write(stan_str)
 
