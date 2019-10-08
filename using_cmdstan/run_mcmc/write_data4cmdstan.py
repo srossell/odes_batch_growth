@@ -13,7 +13,10 @@ from model.simulate_batch_growth import t_sim
 # INPUTS
 
 script_path = os.path.split(__file__)[0]
-f_stan_input_data = os.path.join(script_path, 'batch_growh_input_data.r')
+output_files_path = os.path.join(script_path, 'output_files')
+f_stan_input_data = os.path.join(
+        output_files_path, 'batch_growth_input_data.r'
+        )
 
 
 ###############################################################################
@@ -28,5 +31,6 @@ datadict['t_sim'] = t_sim
 datadict['T'] = len(t_sim)
 datadict['t_obs'] = t_obs
 
-pystan.misc.stan_rdump(datadict, f_stan_input_data)
+if __name__ == '__main__':
+    pystan.misc.stan_rdump(datadict, f_stan_input_data)
 
