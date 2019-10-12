@@ -3,8 +3,9 @@ import os
 import arviz as az
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 
-from model.simulate_batch_growth import t_sim
+from model.simulate_batch_growth import t_obs, t_sim
 
 
 script_path = os.path.split(__file__)[0]
@@ -17,40 +18,29 @@ idata = az.from_cmdstan(
 
 post = idata.posterior
 
-################################################################################
-################################################################################
-# TODO work this into a function, and clean up.
-# TODO plot using t_sim
 
-# Extracting one variable time course with all its 5000 samples
+# Changing coordinates
+post = post.rename({
+    'y0_dim_0': 'initial',
+    'y_hat_dim_1': 'var_obs',
+    'y_hat_dim_0': 'time_obs',
+    'y_hat_n_dim_1': 'var_sim',
+    'y_hat_n_dim_0': 'time_sim',
+    })
 
-# Get the data array
-y_hat_n = idata.posterior.y_hat_n
-
-# (optional) select the first 100 draws (for playing around
-# y = y_hat_n.isel(draw=slice(0, 100))
-y = y_hat_n
-
-# Select the first variable
-y1 = y.sel(y_hat_n_dim_1=0)
-
-# use pandas to shuffle the data array
-y1df = y1.to_dataframe()
-y1df = y1df.drop('y_hat_n_dim_1', axis=1)
-y1df = y1df.reset_index(['chain', 'draw'])
-y1df.loc[:, ['chain', 'draw']] =y1df.loc[:, ['chain', 'draw']].astype(str)
-y1df['cd'] = y1df['chain'].str.cat(y1df['draw'])
-
-# Calclate the high probability density intervals
-my_hpd = az.hpd(y1df.pivot(columns='cd', values='y_hat_n').values.T)
-################################################################################
-################################################################################
-
-
-# Changing the coordinates in th xarray
-post = post.assign_coords(y0_dim_0=['glc0', 'dw0'])
+post = post.assign_coords(initial=['glc0', 'dw0'])
 post = post.assign_coords(p_dim_0=['mu_max', 'Yxs'])
+post = post.assign_coords(var_sim=['glc', 'dw'])
+post = post.assign_coords(var_obs=['glc', 'dw'])
+post = post.assign_coords(time_obs=t_obs)
+post = post.assign_coords(sime_sim=t_sim)
 
+# Stacking chain and draw
+post_stack = post.stack({'cd': ['chain', 'draw']})
+
+# high probability density intervals
+hpd_glc = az.hpd(post_stack.y_hat_n.sel(var_sim='glc').T)
+hpd_dw = az.hpd(post_stack.y_hat_n.sel(var_sim='dw').T)
 
 # Pair plots
 az.plot_pair(post, var_names=['y0', 'p'])
@@ -62,5 +52,18 @@ plt.show()
 
 # Posterior
 az.plot_posterior(post, var_names=['y0', 'p'])
+plt.show()
+
+# Scatter
+plt.scatter(
+        x=post_stack.y0.loc['dw0'],
+        y=post_stack.p.loc['mu_max'],
+        c=post_stack.p.loc['Yxs'])
+plt.show()
+
+# hpd
+fig, ax = plt.subplots(ncols=2)
+ax[0].fill_between(t_sim, hpd_glc[:, 0], hpd_glc[:, 1], alpha=0.2)
+ax[1].fill_between(t_sim, hpd_dw[:, 0], hpd_dw[:, 1], alpha=0.2)
 plt.show()
 
