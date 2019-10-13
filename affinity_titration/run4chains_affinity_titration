@@ -1,0 +1,10 @@
+#!/bin/bash
+for i in {1..4}
+do
+    ./affinity_titration/output_files/affinity_titration \
+        sample num_samples=5000 num_warmup=2000  \
+        id=$i data file=affinity_titration/output_files/affinity_titration_input_data.r \
+        output file=affinity_titration/output_files/affinity_titration_chain_$i.csv refresh=100 &
+done
+
+
