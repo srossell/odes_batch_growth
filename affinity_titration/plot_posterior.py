@@ -25,25 +25,21 @@ post = idata.posterior
 # Changing coordinates
 post = post.rename({
     'y0_dim_0': 'initial',
-    'y_hat_dim_1': 'var_obs',
-    'y_hat_dim_0': 'time_obs',
-    'y_hat_n_dim_1': 'var_sim',
-    'y_hat_n_dim_0': 'time_sim',
+    'y_sim_dim_1': 'var_sim',
+    'y_sim_dim_0': 'time_sim',
     })
 
 post = post.assign_coords(initial=['glc0', 'dw0'])
 post = post.assign_coords(p_dim_0=['mu_max', 'Yxs'])
 post = post.assign_coords(var_sim=['glc', 'dw'])
-post = post.assign_coords(var_obs=['glc', 'dw'])
-post = post.assign_coords(time_obs=t_obs)
-post = post.assign_coords(sime_sim=t_sim)
+#post = post.assign_coords(time_sim=t_sim)
 
 # Stacking chain and draw
 post_stack = post.stack({'cd': ['chain', 'draw']})
 
 # high probability density intervals
-hpd_glc = az.hpd(post_stack.y_hat_n.sel(var_sim='glc').T)
-hpd_dw = az.hpd(post_stack.y_hat_n.sel(var_sim='dw').T)
+hpd_glc = az.hpd(post_stack.y_sim.sel(var_sim='glc').T)
+hpd_dw = az.hpd(post_stack.y_sim.sel(var_sim='dw').T)
 
 # Pair plots
 az.plot_pair(post, var_names=['y0', 'p'])
@@ -64,9 +60,10 @@ plt.scatter(
         c=post_stack.p.loc['Yxs'])
 plt.show()
 
+# NOTE not yet working, may be need to stack t_sim
 # hpd
-fig, ax = plt.subplots(ncols=2)
-ax[0].fill_between(t_sim, hpd_glc[:, 0], hpd_glc[:, 1], alpha=0.2)
-ax[1].fill_between(t_sim, hpd_dw[:, 0], hpd_dw[:, 1], alpha=0.2)
-plt.show()
+# fig, ax = plt.subplots(ncols=2)
+# ax[0].fill_between(t_sim, hpd_glc[:, 0], hpd_glc[:, 1], alpha=0.2)
+# ax[1].fill_between(t_sim, hpd_dw[:, 0], hpd_dw[:, 1], alpha=0.2)
+# plt.show()
 

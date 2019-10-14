@@ -20,7 +20,6 @@ np.random.seed(seed=2357)
 
 t_odes = [0, 9]  # [t0 t_final]
 t_sim = [1, 1.5, 2, 2.5, 3, 5, 8]  # Times to simulate after fitting
-i_obs = [8, 10, 12, 14]  # 5, 6, 7 and 8h indices for the observed measurements
 
 params = m.params.copy()
 params['Km_q_glc'] = 'p[0]'
@@ -82,7 +81,7 @@ outliers_array = np.dot(outliers_array, np.diag([0.2, 1])) + 1
 obs = obs * outliers_array
 obs[obs < 0] = 0  # making sure no negative amounts are among the obs
 
-t_obs = np.repeat(t_sim, len(Kms))
+t_obs = np.tile(t_sim, len(Kms))
 
 
 if __name__ == '__main__':

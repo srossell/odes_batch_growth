@@ -3,11 +3,13 @@ Write data dict as R object to be used as input for cmdstan
 """
 import os
 
+import numpy as np
+
 import pystan
 
-from model.simulate_batch_growth import obs
-from model.simulate_batch_growth import t_obs
-from model.simulate_batch_growth import t_sim
+from affinity_titration.sim_data import obs
+from affinity_titration.sim_data import t_obs
+from affinity_titration.sim_data import Kms
 
 ###############################################################################
 # INPUTS
@@ -17,7 +19,10 @@ output_files_path = os.path.join(script_path, 'output_files')
 f_stan_input_data = os.path.join(
         output_files_path, 'affinity_titration_input_data.r'
         )
+# long, and there are len(Kms) of them
+cum_sizes = np.repeat(int(len(t_obs)/len(Kms)), len(Kms)).cumsum()
 
+t_sim = np.arange(1, 51, 1)
 
 ###############################################################################
 # STATEMENTS
@@ -27,10 +32,12 @@ datadict = {}
 datadict['N'] = obs.shape[0]  # number of samples
 datadict['y'] = obs
 datadict['t0'] = 0
+datadict['cum_sizes'] = cum_sizes
+datadict['K'] = len(cum_sizes)
 datadict['t_sim'] = t_sim
 datadict['T'] = len(t_sim)
 datadict['t_obs'] = t_obs
-datadict['kms']= [1.0]
+datadict['kms']= np.array(Kms)[:, np.newaxis]
 
 if __name__ == '__main__':
     pystan.misc.stan_rdump(datadict, f_stan_input_data)
