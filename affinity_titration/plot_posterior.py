@@ -5,7 +5,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from model.simulate_batch_growth import t_obs, t_sim
+from affinity_titration.sim_data import Kms, obs
+from affinity_titration.sim_data import t_syn as t_obs
+from affinity_titration.write_data4affinity_titration import t_sim
 
 
 script_path = os.path.split(__file__)[0]
@@ -26,20 +28,25 @@ post = idata.posterior
 post = post.rename({
     'y0_dim_0': 'initial',
     'y_sim_dim_1': 'var_sim',
-    'y_sim_dim_0': 'time_sim',
+    'y_sim_dim_0': 'km_vals',
     })
 
 post = post.assign_coords(initial=['glc0', 'dw0'])
 post = post.assign_coords(p_dim_0=['mu_max', 'Yxs'])
 post = post.assign_coords(var_sim=['glc', 'dw'])
-#post = post.assign_coords(time_sim=t_sim)
+post = post.assign_coords(km_vals=np.repeat(Kms, len(t_sim)))
 
 # Stacking chain and draw
 post_stack = post.stack({'cd': ['chain', 'draw']})
 
-# high probability density intervals
-hpd_glc = az.hpd(post_stack.y_sim.sel(var_sim='glc').T)
-hpd_dw = az.hpd(post_stack.y_sim.sel(var_sim='dw').T)
+def get_hps(met, km):
+    hpd = az.hpd(post_stack.sel(var_sim=met, km_vals=km).y_sim.T)
+    return hpd
+
+
+# # high probability density intervals
+# hpd_glc = az.hpd(post_stack.y_sim.sel(var_sim='glc').T)
+# hpd_dw = az.hpd(post_stack.y_sim.sel(var_sim='dw').T)
 
 # Pair plots
 az.plot_pair(post, var_names=['y0', 'p'])
@@ -60,8 +67,21 @@ plt.scatter(
         c=post_stack.p.loc['Yxs'])
 plt.show()
 
-# NOTE not yet working, may be need to stack t_sim
 # hpd
+c_list = ['C{}'.format(i) for i in range(10)]
+fig, ax = plt.subplots(ncols=2)
+for i, km in enumerate(Kms):
+    h = get_hps('glc', km)
+    obs_ = obs[len(t_obs)*i: len(t_obs)*(i+1)]
+    ax[0].fill_between(t_sim, h[:, 0], h[:, 1], color=c_list[i], alpha=0.2)
+    ax[0].plot(t_obs, obs_[:, 0], 'o', color=c_list[i])
+    h = get_hps('dw', km)
+    ax[1].fill_between(t_sim, h[:, 0], h[:, 1], color=c_list[i], alpha=0.2)
+    ax[1].plot(t_obs, obs_[:, 1], 'o', color=c_list[i])
+plt.show()
+
+
+
 # fig, ax = plt.subplots(ncols=2)
 # ax[0].fill_between(t_sim, hpd_glc[:, 0], hpd_glc[:, 1], alpha=0.2)
 # ax[1].fill_between(t_sim, hpd_dw[:, 0], hpd_dw[:, 1], alpha=0.2)

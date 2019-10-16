@@ -22,7 +22,7 @@ f_stan_input_data = os.path.join(
 # long, and there are len(Kms) of them
 cum_sizes = np.repeat(int(len(t_obs)/len(Kms)), len(Kms)).cumsum()
 
-t_sim = np.arange(1, 51, 1)
+t_sim = np.arange(1, 8.5, 0.5)
 
 ###############################################################################
 # STATEMENTS

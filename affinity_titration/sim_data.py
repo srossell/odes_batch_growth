@@ -19,7 +19,7 @@ from model.batch_growth import batch_growth as m
 np.random.seed(seed=2357)
 
 t_odes = [0, 9]  # [t0 t_final]
-t_sim = [1, 1.5, 2, 2.5, 3, 5, 8]  # Times to simulate after fitting
+t_syn = [1, 1.5, 2, 2.5, 3, 5, 8]  # syn for synthetic
 
 params = m.params.copy()
 params['Km_q_glc'] = 'p[0]'
@@ -44,7 +44,7 @@ for p in Kms:
             [0, 9],
             m.init,
             method='LSODA',
-            t_eval=t_sim)
+            t_eval=t_syn)
 
 # Concatenating simulations into an observations array
 for k in Kms:
@@ -61,43 +61,43 @@ dw_err = ss.norm.rvs(loc=0, scale=0.05, size=len(obs))
 obs[:, 0] += glc_err
 obs[:, 1] += dw_err
 
-# Simulating 5 outliers for each variable
-outliers_vec = []
-while len(outliers_vec) <= 10:
-    draw = ss.uniform.rvs(loc=0, scale=1) * 2 - 1
-    if (abs(draw) > 0.2) and (abs(draw) < 0.3):
-        outliers_vec.append(draw)
+### # Simulating 5 outliers for each variable
+### outliers_vec = []
+### while len(outliers_vec) <= 10:
+###     draw = ss.uniform.rvs(loc=0, scale=1) * 2 - 1
+###     if (abs(draw) > 0.2) and (abs(draw) < 0.3):
+###         outliers_vec.append(draw)
+### 
+### outliers_array = np.zeros(len(t_syn)*len(Kms)*len(id_sp))
+### outliers_array.put(
+###         np.random.choice(
+###             np.arange(len(t_syn)*len(Kms)*len(m.id_sp)),
+###             len(outliers_vec)),
+###         outliers_vec
+###         )
+### outliers_array = outliers_array.reshape(-1, len(id_sp))
+### outliers_array = np.dot(outliers_array, np.diag([0.2, 1])) + 1
+### 
+### obs = obs * outliers_array
+### obs[obs < 0] = 0  # making sure no negative amounts are among the obs
 
-outliers_array = np.zeros(len(t_sim)*len(Kms)*len(id_sp))
-outliers_array.put(
-        np.random.choice(
-            np.arange(len(t_sim)*len(Kms)*len(m.id_sp)),
-            len(outliers_vec)),
-        outliers_vec
-        )
-outliers_array = outliers_array.reshape(-1, len(id_sp))
-outliers_array = np.dot(outliers_array, np.diag([0.2, 1])) + 1
-
-obs = obs * outliers_array
-obs[obs < 0] = 0  # making sure no negative amounts are among the obs
-
-t_obs = np.tile(t_sim, len(Kms))
+t_obs = np.tile(t_syn, len(Kms))
 
 
 if __name__ == '__main__':
     # Creating indices to slice obs by experiment (Km value)
-    low_ind = np.array(list(islice(count(0, len(t_sim)), len(Kms))))
-    high_ind = low_ind + len(t_sim)
+    low_ind = np.array(list(islice(count(0, len(t_syn)), len(Kms))))
+    high_ind = low_ind + len(t_syn)
 
     # color list
     c = ['C'+ str(i) for i in range(10)]
     # Ploting observations
     fig, ax = plt.subplots(ncols=2)
     for i, l, h in zip(range(len(low_ind)), low_ind, high_ind):
-        ax[0].plot(t_sim, obs[l:h, 0], 'o', c=c[i])
-        ax[0].plot(t_sim, sims[l:h, 0], c=c[i])
-        ax[1].plot(t_sim, obs[l:h, 1], 'o', c=c[i])
-        ax[1].plot(t_sim, sims[l:h, 1], c=c[i])
+        ax[0].plot(t_syn, obs[l:h, 0], 'o', c=c[i])
+        ax[0].plot(t_syn, sims[l:h, 0], c=c[i])
+        ax[1].plot(t_syn, obs[l:h, 1], 'o', c=c[i])
+        ax[1].plot(t_syn, sims[l:h, 1], c=c[i])
         ax[0].set_ylim(0, 120)
         ax[1].set_ylim(0, 3.5)
     plt.show()
